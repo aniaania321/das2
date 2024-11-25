@@ -1,5 +1,6 @@
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class DAS {
@@ -10,7 +11,7 @@ public class DAS {
         int number = Integer.parseInt(args[1]);
         try {
             System.out.println("Port: " + port);
-            System.out.println("Number: " + number);
+            System.out.println("Input: " + number);
             socket = new DatagramSocket(port);
             mode="Master";
         }catch (Exception e) {
@@ -24,11 +25,13 @@ public class DAS {
                     byte[] buffer = new byte[1024];
                     numbers.add(Integer.parseInt(args[1]));
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+
                     while(true) {
                         socket.receive(packet);
                         byte[] data = packet.getData();
-                        if (isInteger(new String(data).trim())) {
-                            int dataInt = Integer.parseInt(new String(data).trim());
+                        String message = new String(data, 0, packet.getLength()).trim();
+                        if (isInteger(message)) {
+                            int dataInt = Integer.parseInt(message);
                             if (dataInt == 0) {
                                 if (!numbers.isEmpty()) {
                                     int sum=0;
@@ -36,25 +39,24 @@ public class DAS {
                                         sum += i;
                                     }
                                     double average = sum / (double) numbers.size();
-                                    System.out.println(average);
+                                    System.out.println("Average: "+average);
                                     broadcast(String.valueOf(average), port);
                                 }
                             } else if (dataInt == -1) {
                                 broadcast("-1",port);
-                                System.out.println("Program terminated");
+                                System.out.println("Ending program...");
                                 socket.close();
                                 break;
                             } else {
                                 numbers.add(dataInt);
                             }
                         }
+                        Arrays.fill(buffer, (byte) 0);
                     }
-
                 }catch (Exception e) {
                     e.printStackTrace();
                 }
                 break;
-
             case "Slave":
                 System.out.println("Running in slave mode");
                 try{
@@ -75,11 +77,9 @@ public class DAS {
         try {
             DatagramSocket socket = new DatagramSocket();
             socket.setBroadcast(true); // Enable broadcasting
-
             InetAddress address = InetAddress.getByName("255.255.255.255"); // Broadcast address
             byte[] buffer = message.getBytes(); // Convert the String to bytes
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
-            System.out.println("broadcasted");
             socket.send(packet); // Send the packet
             socket.close(); // Close the socket
         } catch (Exception e) {
