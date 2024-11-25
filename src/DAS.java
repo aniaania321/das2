@@ -16,7 +16,6 @@ public class DAS {
         }catch (Exception e) {
             mode="Slave";
         }
-        int sum;
         switch (mode) {
             case "Master":
                 System.out.println("Running in master mode");
@@ -26,13 +25,13 @@ public class DAS {
                     numbers.add(Integer.parseInt(args[1]));
                     DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                     while(true) {
-                        sum = 0;
                         socket.receive(packet);
                         byte[] data = packet.getData();
                         if (isInteger(new String(data).trim())) {
                             int dataInt = Integer.parseInt(new String(data).trim());
                             if (dataInt == 0) {
                                 if (!numbers.isEmpty()) {
+                                    int sum=0;
                                     for (int i : numbers) {
                                         sum += i;
                                     }
@@ -42,6 +41,7 @@ public class DAS {
                                 }
                             } else if (dataInt == -1) {
                                 broadcast("-1",port);
+                                System.out.println("Program terminated");
                                 socket.close();
                                 break;
                             } else {
@@ -76,10 +76,10 @@ public class DAS {
             DatagramSocket socket = new DatagramSocket();
             socket.setBroadcast(true); // Enable broadcasting
 
-            InetAddress address = InetAddress.getByName("192.168.1.255"); // Broadcast address
+            InetAddress address = InetAddress.getByName("255.255.255.255"); // Broadcast address
             byte[] buffer = message.getBytes(); // Convert the String to bytes
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length, address, port);
-
+            System.out.println("broadcasted");
             socket.send(packet); // Send the packet
             socket.close(); // Close the socket
         } catch (Exception e) {
@@ -94,9 +94,4 @@ public class DAS {
             return false;
         }
     }
-
-
-
-
-
 }
